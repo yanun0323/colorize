@@ -2,6 +2,7 @@ package colorize
 
 import (
 	"bytes"
+	"io"
 	"sync"
 )
 
@@ -49,40 +50,51 @@ const (
 
 var (
 	bufferPool = sync.Pool{
-		New: func() interface{} {
+		New: func() any {
 			return bytes.NewBuffer(make([]byte, 0, 1024))
 		},
 	}
 )
 
 // String colorize string
-func String(s string, c string) string {
+func String(c string, contents ...string) string {
 	buf := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buf)
 	buf.Reset()
-	buf.Grow(len(s) + len(c) + len(Reset))
-	Write(buf, s, c)
+	WriteString(buf, c, contents...)
 	return buf.String()
 }
 
 // Bytes colorize bytes
-func Bytes(s []byte, c string) []byte {
+func Bytes(color string, contents ...[]byte) []byte {
 	buf := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buf)
 	buf.Reset()
-	buf.Grow(len(s) + len(c) + len(Reset))
-	Write(buf, string(s), c)
+	WriteBytes(buf, color, contents...)
 	return buf.Bytes()
 }
 
-// StringWriter is the interface that wraps the basic WriteString method.
-type StringWriter interface {
-	WriteString(s string) (n int, err error)
+// Writer is the interface that wraps the basic WriteString method.
+type Writer interface {
+	io.Writer
+	io.StringWriter
+	io.ByteWriter
 }
 
-// Write write colorized string to buffer
-func Write(buf StringWriter, s string, c string) {
-	buf.WriteString(c)
-	buf.WriteString(s)
+// WriteString write colorized string to buffer
+func WriteString(buf Writer, color string, contents ...string) {
+	buf.WriteString(color)
+	for _, s := range contents {
+		buf.WriteString(s)
+	}
+	buf.WriteString(Reset)
+}
+
+// WriteBytes write colorized bytes to buffer
+func WriteBytes(buf Writer, color string, contents ...[]byte) {
+	buf.WriteString(color)
+	for _, b := range contents {
+		buf.Write(b)
+	}
 	buf.WriteString(Reset)
 }

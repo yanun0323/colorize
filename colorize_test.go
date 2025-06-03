@@ -1,6 +1,7 @@
 package colorize
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -155,16 +156,29 @@ func TestColorize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.args.s, func(t *testing.T) {
-			got := String(tt.args.s, tt.args.c)
+			got := String(tt.args.c, tt.args.s)
 			if got != tt.want {
 				t.Errorf("String() = %q, want %q", got, tt.want)
 			}
 
-			got = string(Bytes([]byte(tt.args.s), tt.args.c))
+			got = string(Bytes(tt.args.c, []byte(tt.args.s)))
 			if string(got) != tt.want {
 				t.Errorf("Bytes() = %q, want %q", string(got), tt.want)
 			}
 		})
+	}
+}
+
+func TestColorizeMulti(t *testing.T) {
+	buf := strings.Builder{}
+	WriteString(&buf, Red, "Hello", ", World")
+	if buf.String() != "\x1b[31mHello, World\x1b[0m" {
+		t.Errorf("WriteString() = %q, want %q", buf.String(), "\x1b[31mHello, World\x1b[0m")
+	}
+
+	WriteBytes(&buf, Green, []byte("Hello"), []byte(", World"))
+	if buf.String() != "\x1b[31mHello, World\x1b[0m\x1b[32mHello, World\x1b[0m" {
+		t.Errorf("WriteBytes() = %q, want %q", buf.String(), "\x1b[31mHello, World\x1b[0m\x1b[32mHello, World\x1b[0m")
 	}
 }
 
@@ -224,6 +238,6 @@ func TestColorizePrint(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		println(string(Bytes([]byte(tt.s), tt.c)))
+		println(string(Bytes(tt.c, []byte(tt.s))))
 	}
 }

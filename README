@@ -28,10 +28,10 @@ import (
 )
 
 func main() {
-    fmt.Println(colorize.Colorize("Hello World", colorize.Red))
-    fmt.Println(colorize.Colorize("Success!", colorize.Green))
-    fmt.Println(colorize.Colorize("Warning", colorize.Yellow))
-    fmt.Println(colorize.Colorize("Error", colorize.BrightRed))
+    fmt.Println(colorize.String("Hello World", colorize.Red))
+    fmt.Println(colorize.String("Success!", colorize.Green))
+    fmt.Println(colorize.String("Warning", colorize.Yellow))
+    fmt.Println(colorize.String("Error", colorize.BrightRed))
 }
 ```
 

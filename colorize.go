@@ -2,50 +2,57 @@ package colorize
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"sync"
 )
 
+type Color string
+
+func (c Color) String() string {
+	return string(c)
+}
+
 const (
-	Reset = "\x1b[0m"
+	ColorReset Color = "\x1b[0m"
 )
 
 const (
-	Black   = "\x1b[30m"
-	Red     = "\x1b[31m"
-	Green   = "\x1b[32m"
-	Yellow  = "\x1b[33m"
-	Blue    = "\x1b[34m"
-	Magenta = "\x1b[35m"
-	Cyan    = "\x1b[36m"
-	White   = "\x1b[37m"
+	ColorBlack   Color = "\x1b[30m"
+	ColorRed     Color = "\x1b[31m"
+	ColorGreen   Color = "\x1b[32m"
+	ColorYellow  Color = "\x1b[33m"
+	ColorBlue    Color = "\x1b[34m"
+	ColorMagenta Color = "\x1b[35m"
+	ColorCyan    Color = "\x1b[36m"
+	ColorWhite   Color = "\x1b[37m"
 
-	BlackReversed   = "\x1b[40m"
-	RedReversed     = "\x1b[41m"
-	GreenReversed   = "\x1b[42m"
-	YellowReversed  = "\x1b[43m"
-	BlueReversed    = "\x1b[44m"
-	MagentaReversed = "\x1b[45m"
-	CyanReversed    = "\x1b[46m"
-	WhiteReversed   = "\x1b[47m"
+	ColorBlackReversed   Color = "\x1b[40m"
+	ColorRedReversed     Color = "\x1b[41m"
+	ColorGreenReversed   Color = "\x1b[42m"
+	ColorYellowReversed  Color = "\x1b[43m"
+	ColorBlueReversed    Color = "\x1b[44m"
+	ColorMagentaReversed Color = "\x1b[45m"
+	ColorCyanReversed    Color = "\x1b[46m"
+	ColorWhiteReversed   Color = "\x1b[47m"
 
-	BrightBlack   = "\x1b[90m"
-	BrightRed     = "\x1b[91m"
-	BrightGreen   = "\x1b[92m"
-	BrightYellow  = "\x1b[93m"
-	BrightBlue    = "\x1b[94m"
-	BrightMagenta = "\x1b[95m"
-	BrightCyan    = "\x1b[96m"
-	BrightWhite   = "\x1b[97m"
+	ColorBrightBlack   Color = "\x1b[90m"
+	ColorBrightRed     Color = "\x1b[91m"
+	ColorBrightGreen   Color = "\x1b[92m"
+	ColorBrightYellow  Color = "\x1b[93m"
+	ColorBrightBlue    Color = "\x1b[94m"
+	ColorBrightMagenta Color = "\x1b[95m"
+	ColorBrightCyan    Color = "\x1b[96m"
+	ColorBrightWhite   Color = "\x1b[97m"
 
-	BrightBlackReversed   = "\x1b[100m"
-	BrightRedReversed     = "\x1b[101m"
-	BrightGreenReversed   = "\x1b[102m"
-	BrightYellowReversed  = "\x1b[103m"
-	BrightBlueReversed    = "\x1b[104m"
-	BrightMagentaReversed = "\x1b[105m"
-	BrightCyanReversed    = "\x1b[106m"
-	BrightWhiteReversed   = "\x1b[107m"
+	ColorBrightBlackReversed   Color = "\x1b[100m"
+	ColorBrightRedReversed     Color = "\x1b[101m"
+	ColorBrightGreenReversed   Color = "\x1b[102m"
+	ColorBrightYellowReversed  Color = "\x1b[103m"
+	ColorBrightBlueReversed    Color = "\x1b[104m"
+	ColorBrightMagentaReversed Color = "\x1b[105m"
+	ColorBrightCyanReversed    Color = "\x1b[106m"
+	ColorBrightWhiteReversed   Color = "\x1b[107m"
 )
 
 var (
@@ -57,50 +64,118 @@ var (
 )
 
 // String colorize string
-func String(c string, contents ...string) string {
+func String(c Color, str ...string) string {
+	if len(str) == 0 {
+		return ""
+	}
+
 	buf := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buf)
 	buf.Reset()
-	WriteString(buf, c, contents...)
+
+	buf.WriteString(c.String())
+	for _, arg := range str {
+		buf.WriteString(arg)
+	}
+	buf.WriteString(ColorReset.String())
 	return buf.String()
 }
 
-// Bytes colorize bytes
-func Bytes(color string, contents ...[]byte) []byte {
+// Sprint colorize and formats using the default formats for its operands and returns the resulting string. Spaces are added between operands when neither is a string.
+func Sprint(c Color, args ...any) string {
 	buf := bufferPool.Get().(*bytes.Buffer)
 	defer bufferPool.Put(buf)
 	buf.Reset()
-	WriteBytes(buf, color, contents...)
-	return buf.Bytes()
+	Fprint(buf, c, args...)
+	return buf.String()
 }
 
-// Writer is the interface that wraps the basic WriteString method.
+// Sprintf colorize and formats according to a format specifier and returns the resulting string.
+func Sprintf(c Color, format string, args ...any) string {
+	buf := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buf)
+	buf.Reset()
+	Fprintf(buf, c, format, args...)
+	return buf.String()
+}
+
+// Writer is the interface for colorized writer
 type Writer interface {
 	io.Writer
 	io.StringWriter
 	io.ByteWriter
 }
 
-// WriteString write colorized string to buffer
-func WriteString(buf Writer, color string, contents ...string) {
-	buf.WriteString(color)
-	for _, s := range contents {
-		buf.WriteString(s)
+// Fprint colorize and formats using the default formats for its operands and writes to w. Spaces are added between operands when neither is a string. It returns the number of bytes written and any write error encountered.
+func Fprint(w Writer, c Color, args ...any) (int, error) {
+	if len(args) == 0 {
+		return 0, nil
 	}
-	buf.WriteString(Reset)
+
+	var (
+		result int
+		n      int
+		err    error
+	)
+	n, err = w.WriteString(c.String())
+	if err != nil {
+		return 0, err
+	}
+	result += n
+
+	n, err = fmt.Fprint(w, args...)
+	if err != nil {
+		return 0, err
+	}
+	result += n
+
+	n, err = w.WriteString(ColorReset.String())
+	if err != nil {
+		return 0, err
+	}
+	result += n
+
+	return result, nil
 }
 
-// WriteBytes write colorized bytes to buffer
-func WriteBytes(buf Writer, color string, contents ...[]byte) {
-	buf.WriteString(color)
-	for _, b := range contents {
-		buf.Write(b)
+// Write write colorized string to buffer
+func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
+	if len(format) == 0 {
+		return 0, nil
 	}
-	buf.WriteString(Reset)
+
+	if len(args) == 0 {
+		return Fprint(w, c, format)
+	}
+
+	var (
+		result int
+		n      int
+		err    error
+	)
+	n, err = w.WriteString(c.String())
+	if err != nil {
+		return 0, err
+	}
+	result += n
+
+	n, err = fmt.Fprintf(w, format, args...)
+	if err != nil {
+		return 0, err
+	}
+	result += n
+
+	n, err = w.WriteString(ColorReset.String())
+	if err != nil {
+		return 0, err
+	}
+	result += n
+
+	return result, nil
 }
 
-// ResetString reset string color
-func ResetString(s string) string {
+// Reset reset string color
+func Reset(s string) string {
 	if len(s) == 0 {
 		return s
 	}
@@ -132,39 +207,4 @@ func ResetString(s string) string {
 	}
 
 	return buf.String()
-}
-
-// ResetBytes reset bytes color
-func ResetBytes(s []byte) []byte {
-	if len(s) == 0 {
-		return s
-	}
-
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buf)
-	buf.Reset()
-
-	i := 0
-	for i < len(s) {
-		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
-			// Find the end of ANSI escape sequence
-			j := i + 2
-			for j < len(s) && s[j] != 'm' {
-				j++
-			}
-			if j < len(s) {
-				// Skip the entire escape sequence including 'm'
-				i = j + 1
-			} else {
-				// Malformed escape sequence, keep the character
-				buf.WriteByte(s[i])
-				i++
-			}
-		} else {
-			buf.WriteByte(s[i])
-			i++
-		}
-	}
-
-	return buf.Bytes()
 }

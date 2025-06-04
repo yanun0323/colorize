@@ -2,7 +2,7 @@
 
 A simple, lightweight Go library for terminal text colorization using ANSI escape codes.
 
-<img src="https://github.com/yanun0323/assets/blob/master/colorize.split.four.png?raw=true" alt="colorize" style="border-radius: 8px;" />
+<img src="https://raw.githubusercontent.com/yanun0323/assets/refs/heads/master/colorize.split.four.png" alt="colorize" style="border-radius: 8px;" />
 
 ## Features
 

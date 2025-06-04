@@ -98,3 +98,73 @@ func WriteBytes(buf Writer, color string, contents ...[]byte) {
 	}
 	buf.WriteString(Reset)
 }
+
+// ResetString reset string color
+func ResetString(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+
+	buf := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buf)
+	buf.Reset()
+
+	i := 0
+	for i < len(s) {
+		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
+			// Find the end of ANSI escape sequence
+			j := i + 2
+			for j < len(s) && s[j] != 'm' {
+				j++
+			}
+			if j < len(s) {
+				// Skip the entire escape sequence including 'm'
+				i = j + 1
+			} else {
+				// Malformed escape sequence, keep the character
+				buf.WriteByte(s[i])
+				i++
+			}
+		} else {
+			buf.WriteByte(s[i])
+			i++
+		}
+	}
+
+	return buf.String()
+}
+
+// ResetBytes reset bytes color
+func ResetBytes(s []byte) []byte {
+	if len(s) == 0 {
+		return s
+	}
+
+	buf := bufferPool.Get().(*bytes.Buffer)
+	defer bufferPool.Put(buf)
+	buf.Reset()
+
+	i := 0
+	for i < len(s) {
+		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
+			// Find the end of ANSI escape sequence
+			j := i + 2
+			for j < len(s) && s[j] != 'm' {
+				j++
+			}
+			if j < len(s) {
+				// Skip the entire escape sequence including 'm'
+				i = j + 1
+			} else {
+				// Malformed escape sequence, keep the character
+				buf.WriteByte(s[i])
+				i++
+			}
+		} else {
+			buf.WriteByte(s[i])
+			i++
+		}
+	}
+
+	return buf.Bytes()
+}

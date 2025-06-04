@@ -1,6 +1,7 @@
 package colorize
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 )
@@ -182,6 +183,20 @@ func TestColorizeMulti(t *testing.T) {
 	}
 }
 
+func TestColorizeReset(t *testing.T) {
+	buf := bytes.Buffer{}
+	WriteString(&buf, Red, "Hello", ", World")
+	if ResetString(buf.String()) != "Hello, World" {
+		t.Errorf("ResetString() = %q, want %q", ResetString(buf.String()), "Hello, World")
+	}
+
+	buf.Reset()
+	WriteBytes(&buf, Green, []byte("Hello"), []byte(", World"))
+	if string(ResetBytes(buf.Bytes())) != "Hello, World" {
+		t.Errorf("ResetBytes() = %q, want %q", ResetBytes(buf.Bytes()), []byte("Hello, World"))
+	}
+}
+
 func TestColorizePrint(t *testing.T) {
 	type args struct {
 		s string
@@ -233,11 +248,23 @@ func TestColorizePrint(t *testing.T) {
 		{},
 	}
 
+	println("=== String ===")
 	for _, tt := range tests {
-		println(String(tt.s, tt.c))
+		println(String(tt.c, tt.s))
 	}
 
+	println("=== Bytes ===")
 	for _, tt := range tests {
 		println(string(Bytes(tt.c, []byte(tt.s))))
+	}
+
+	println("=== Reset String ===")
+	for _, tt := range tests {
+		println(ResetString(String(tt.c, tt.s)))
+	}
+
+	println("=== Reset Bytes ===")
+	for _, tt := range tests {
+		println(string(ResetBytes(Bytes(tt.c, []byte(tt.s)))))
 	}
 }

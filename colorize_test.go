@@ -259,6 +259,13 @@ func BenchmarkColorizeString(b *testing.B) {
 	}
 }
 
+func BenchmarkColorizeReset(b *testing.B) {
+	s := String(ColorRed, "Hello, World")
+	for b.Loop() {
+		Reset(s)
+	}
+}
+
 func BenchmarkColorizeSprint(b *testing.B) {
 	for b.Loop() {
 		Sprint(ColorRed, "Hello, World")
@@ -268,16 +275,6 @@ func BenchmarkColorizeSprint(b *testing.B) {
 func BenchmarkColorizeSprintf(b *testing.B) {
 	for b.Loop() {
 		Sprintf(ColorRed, "%s", "Hello, World")
-	}
-}
-
-func BenchmarkColorizeAppend(b *testing.B) {
-	buf := make([]byte, 4<<10)
-	for b.Loop() {
-		buf = buf[:0]
-		buf = append(buf, ColorRed...)
-		buf = append(buf, "Hello, World"...)
-		buf = append(buf, ColorReset...)
 	}
 }
 
@@ -297,9 +294,12 @@ func BenchmarkColorizeFprintf(b *testing.B) {
 	}
 }
 
-func BenchmarkColorizeReset(b *testing.B) {
-	s := String(ColorRed, "Hello, World")
+func BenchmarkColorizeAppend(b *testing.B) {
+	buf := make([]byte, 4<<10)
 	for b.Loop() {
-		Reset(s)
+		buf = buf[:0]
+		buf = append(buf, ColorRed...)
+		buf = append(buf, "Hello, World"...)
+		buf = append(buf, ColorReset...)
 	}
 }

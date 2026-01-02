@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"sync"
 )
 
 type Color string
@@ -55,12 +54,8 @@ const (
 	ColorBrightWhiteReversed   Color = "\x1b[107m"
 )
 
-var (
-	bufferPool = sync.Pool{
-		New: func() any {
-			return bytes.NewBuffer(make([]byte, 0, 4<<10))
-		},
-	}
+const (
+	_defaultBufferSize = 4 << 10
 )
 
 // String colorize string
@@ -69,33 +64,32 @@ func String(c Color, str ...string) string {
 		return ""
 	}
 
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buf)
-	buf.Reset()
-
-	buf.WriteString(c.String())
-	for _, arg := range str {
-		buf.WriteString(arg)
+	sz := len(c) + len(ColorReset)
+	for i := range str {
+		sz += len(str[i])
 	}
-	buf.WriteString(ColorReset.String())
-	return buf.String()
+
+	buf := make([]byte, sz)
+	buf = buf[:0]
+	buf = append(buf, c...)
+	for i := range str {
+		buf = append(buf, str[i]...)
+	}
+	buf = append(buf, ColorReset...)
+	return string(buf)
 }
 
 // Sprint colorize and formats using the default formats for its operands and returns the resulting string. Spaces are added between operands when neither is a string.
 func Sprint(c Color, args ...any) string {
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buf)
-	buf.Reset()
-	Fprint(buf, c, args...)
+	buf := bytes.Buffer{}
+	Fprint(&buf, c, args...)
 	return buf.String()
 }
 
 // Sprintf colorize and formats according to a format specifier and returns the resulting string.
 func Sprintf(c Color, format string, args ...any) string {
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buf)
-	buf.Reset()
-	Fprintf(buf, c, format, args...)
+	buf := bytes.Buffer{}
+	Fprintf(&buf, c, format, args...)
 	return buf.String()
 }
 
@@ -117,7 +111,7 @@ func Fprint(w Writer, c Color, args ...any) (int, error) {
 		n      int
 		err    error
 	)
-	n, err = w.WriteString(c.String())
+	n, err = w.WriteString(string(c))
 	if err != nil {
 		return 0, err
 	}
@@ -129,7 +123,7 @@ func Fprint(w Writer, c Color, args ...any) (int, error) {
 	}
 	result += n
 
-	n, err = w.WriteString(ColorReset.String())
+	n, err = w.WriteString(string(ColorReset))
 	if err != nil {
 		return 0, err
 	}
@@ -153,7 +147,7 @@ func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
 		n      int
 		err    error
 	)
-	n, err = w.WriteString(c.String())
+	n, err = w.WriteString(string(c))
 	if err != nil {
 		return 0, err
 	}
@@ -165,7 +159,7 @@ func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
 	}
 	result += n
 
-	n, err = w.WriteString(ColorReset.String())
+	n, err = w.WriteString(string(ColorReset))
 	if err != nil {
 		return 0, err
 	}
@@ -180,9 +174,8 @@ func Reset(s string) string {
 		return s
 	}
 
-	buf := bufferPool.Get().(*bytes.Buffer)
-	defer bufferPool.Put(buf)
-	buf.Reset()
+	buf := make([]byte, len(s))
+	buf = buf[:0]
 
 	i := 0
 	for i < len(s) {
@@ -197,14 +190,14 @@ func Reset(s string) string {
 				i = j + 1
 			} else {
 				// Malformed escape sequence, keep the character
-				buf.WriteByte(s[i])
+				buf = append(buf, s[i])
 				i++
 			}
 		} else {
-			buf.WriteByte(s[i])
+			buf = append(buf, s[i])
 			i++
 		}
 	}
 
-	return buf.String()
+	return string(buf)
 }

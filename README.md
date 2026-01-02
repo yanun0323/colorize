@@ -80,12 +80,12 @@ Benchmarks (darwin/arm64, Apple M2).
 
 ```bash
 BenchmarkColorizeString-8       39335316                30.01 ns/op           24 B/op          1 allocs/op
-BenchmarkColorizeSprint-8       23177600                51.25 ns/op           24 B/op          1 allocs/op
-BenchmarkColorizeSprintf-8      22460238                53.26 ns/op           24 B/op          1 allocs/op
-BenchmarkColorizeAppend-8      634096282                 1.89 ns/op            0 B/op          0 allocs/op
+BenchmarkColorizeReset-8        25729447                45.86 ns/op           16 B/op          1 allocs/op
+BenchmarkColorizeSprint-8       14059197                80.54 ns/op          136 B/op          3 allocs/op
+BenchmarkColorizeSprintf-8      14723767                81.97 ns/op          136 B/op          3 allocs/op
 BenchmarkColorizeFprint-8       36809578                33.07 ns/op            0 B/op          0 allocs/op
 BenchmarkColorizeFprintf-8      34705401                35.12 ns/op            0 B/op          0 allocs/op
-BenchmarkColorizeReset-8        25729447                45.86 ns/op           16 B/op          1 allocs/op
+BenchmarkColorizeAppend-8      634096282                 1.89 ns/op            0 B/op          0 allocs/op
 ```
 
 ## License

@@ -271,6 +271,16 @@ func BenchmarkColorizeSprintf(b *testing.B) {
 	}
 }
 
+func BenchmarkColorizeAppend(b *testing.B) {
+	buf := make([]byte, 4<<10)
+	for b.Loop() {
+		buf = buf[:0]
+		buf = append(buf, ColorRed...)
+		buf = append(buf, "Hello, World"...)
+		buf = append(buf, ColorReset...)
+	}
+}
+
 func BenchmarkColorizeFprint(b *testing.B) {
 	buf := bytes.Buffer{}
 	for b.Loop() {
@@ -283,7 +293,7 @@ func BenchmarkColorizeFprintf(b *testing.B) {
 	buf := bytes.Buffer{}
 	for b.Loop() {
 		buf.Reset()
-		Fprintf(&buf, ColorRed, "%s", "Hello, World")
+		Fprintf(&buf, ColorRed, "%s, %d", "Hello, World", 123456)
 	}
 }
 

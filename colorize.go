@@ -58,7 +58,7 @@ const (
 var (
 	bufferPool = sync.Pool{
 		New: func() any {
-			return bytes.NewBuffer(make([]byte, 0, 1024))
+			return bytes.NewBuffer(make([]byte, 0, 4<<10))
 		},
 	}
 )
@@ -138,7 +138,7 @@ func Fprint(w Writer, c Color, args ...any) (int, error) {
 	return result, nil
 }
 
-// Write write colorized string to buffer
+// Fprintf colorize and formats using the default formats for its operands and writes to w. Spaces are added between operands when neither is a string. It returns the number of bytes written and any write error encountered.
 func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
 	if len(format) == 0 {
 		return 0, nil

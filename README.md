@@ -52,8 +52,7 @@ func main() {
 For maximum performance, you can build the colored output by appending to a pre-allocated byte slice:
 
 ```go
-buf := make([]byte, 4<<10) // allocate enough size
-buf = buf[:0]
+buf := make([]byte, 0, 4<<10) // allocate enough size
 buf = append(buf, colorize.ColorRed...)
 buf = append(buf, "Hello, World"...)
 buf = append(buf, colorize.ColorReset...)
@@ -66,8 +65,8 @@ buf = append(buf, colorize.ColorReset...)
 - `String(c Color, str ...string) string` - Colorize multiple strings
 - `Sprint(c Color, args ...any) string` - Colorize with fmt.Sprint behavior
 - `Sprintf(c Color, format string, args ...any) string` - Colorize with formatting
-- `Fprint(w Writer, c Color, args ...any) (int, error)` - Write colorized text to writer
-- `Fprintf(w Writer, c Color, format string, args ...any) (int, error)` - Write formatted colorized text
+- `Fprint(w io.Writer, c Color, args ...any) (int, error)` - Write colorized text to writer
+- `Fprintf(w io.Writer, c Color, format string, args ...any) (int, error)` - Write formatted colorized text
 - `Reset(s string) string` - Remove ANSI escape codes from string
 
 ### Available Colors

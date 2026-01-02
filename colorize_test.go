@@ -290,7 +290,7 @@ func BenchmarkColorizeFprintf(b *testing.B) {
 	buf := bytes.Buffer{}
 	for b.Loop() {
 		buf.Reset()
-		Fprintf(&buf, ColorRed, "%s, %d", "Hello, World", 123456)
+		Fprintf(&buf, ColorRed, "%s", "Hello, World")
 	}
 }
 

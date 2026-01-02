@@ -93,15 +93,8 @@ func Sprintf(c Color, format string, args ...any) string {
 	return buf.String()
 }
 
-// Writer is the interface for colorized writer
-type Writer interface {
-	io.Writer
-	io.StringWriter
-	io.ByteWriter
-}
-
 // Fprint colorize and formats using the default formats for its operands and writes to w. Spaces are added between operands when neither is a string. It returns the number of bytes written and any write error encountered.
-func Fprint(w Writer, c Color, args ...any) (int, error) {
+func Fprint(w io.Writer, c Color, args ...any) (int, error) {
 	if len(args) == 0 {
 		return 0, nil
 	}
@@ -111,7 +104,7 @@ func Fprint(w Writer, c Color, args ...any) (int, error) {
 		n      int
 		err    error
 	)
-	n, err = w.WriteString(string(c))
+	n, err = io.WriteString(w, string(c))
 	if err != nil {
 		return 0, err
 	}
@@ -123,7 +116,7 @@ func Fprint(w Writer, c Color, args ...any) (int, error) {
 	}
 	result += n
 
-	n, err = w.WriteString(string(ColorReset))
+	n, err = io.WriteString(w, string(ColorReset))
 	if err != nil {
 		return 0, err
 	}
@@ -133,7 +126,7 @@ func Fprint(w Writer, c Color, args ...any) (int, error) {
 }
 
 // Fprintf colorize and formats using the default formats for its operands and writes to w. Spaces are added between operands when neither is a string. It returns the number of bytes written and any write error encountered.
-func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
+func Fprintf(w io.Writer, c Color, format string, args ...any) (int, error) {
 	if len(format) == 0 {
 		return 0, nil
 	}
@@ -147,7 +140,7 @@ func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
 		n      int
 		err    error
 	)
-	n, err = w.WriteString(string(c))
+	n, err = io.WriteString(w, string(c))
 	if err != nil {
 		return 0, err
 	}
@@ -159,7 +152,7 @@ func Fprintf(w Writer, c Color, format string, args ...any) (int, error) {
 	}
 	result += n
 
-	n, err = w.WriteString(string(ColorReset))
+	n, err = io.WriteString(w, string(ColorReset))
 	if err != nil {
 		return 0, err
 	}
@@ -174,9 +167,7 @@ func Reset(s string) string {
 		return s
 	}
 
-	buf := make([]byte, len(s))
-	buf = buf[:0]
-
+	buf := make([]byte, 0, len(s))
 	i := 0
 	for i < len(s) {
 		if s[i] == '\x1b' && i+1 < len(s) && s[i+1] == '[' {
